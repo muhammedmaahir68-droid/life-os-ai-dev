@@ -36,7 +36,18 @@ async function callGemini(apiKey, systemInstruction, history, userMessage) {
 
   if (!res.ok) {
     const errText = await res.text();
-    throw new Error(`Gemini API ${res.status}: ${errText}`);
+    let availableModels = "";
+    if (res.status === 404) {
+      try {
+        const modelsRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+        const modelsData = await modelsRes.json();
+        const names = modelsData.models?.map(m => m.name.replace('models/', '')) || [];
+        availableModels = "\\n\\nAVAILABLE MODELS FOR YOUR KEY: " + names.join(", ");
+      } catch (e) {
+        console.error("Failed to fetch models list", e);
+      }
+    }
+    throw new Error(`Gemini API ${res.status}: ${errText}${availableModels}`);
   }
 
   const data = await res.json();
