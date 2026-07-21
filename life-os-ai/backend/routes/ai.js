@@ -11,7 +11,7 @@ router.use(requireAuth);
 // FREE: 15 req/min, 1 million tokens/day. Get key: https://aistudio.google.com/app/apikey
 async function callGemini(apiKey, systemInstruction, history, userMessage) {
   const GEMINI_URL =
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`;
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`;
 
   // Build contents array: history + new user message
   const contents = [
@@ -36,18 +36,7 @@ async function callGemini(apiKey, systemInstruction, history, userMessage) {
 
   if (!res.ok) {
     const errText = await res.text();
-    let availableModels = "";
-    if (res.status === 404) {
-      try {
-        const modelsRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
-        const modelsData = await modelsRes.json();
-        const names = modelsData.models?.map(m => m.name.replace('models/', '')) || [];
-        availableModels = "\\n\\nAVAILABLE MODELS FOR YOUR KEY: " + names.join(", ");
-      } catch (e) {
-        console.error("Failed to fetch models list", e);
-      }
-    }
-    throw new Error(`Gemini API ${res.status}: ${errText}${availableModels}`);
+    throw new Error(`Gemini API ${res.status}: ${errText}`);
   }
 
   const data = await res.json();
